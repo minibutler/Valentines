@@ -678,10 +678,30 @@
       }
     }
 
+    function resetMainState() {
+      accepted = false;
+      dodgeCount = 0;
+      result.style.display = "none";
+      garden.style.display = "none";
+      noBtn.style.opacity = "1";
+      noBtn.style.pointerEvents = "auto";
+      yesBtn.style.transform = "scale(1)";
+      hint.textContent = "There is only one stable answer here.";
+      noBtn.textContent = "No";
+    }
+
+    function showMainScreen() {
+      document.getElementById("card").style.display = "block";
+      celebrateOverlay.style.display = "none";
+      resetMainState();
+    }
+
     function startCelebration() {
       document.getElementById("card").style.display = "none";
       celebrateOverlay.style.display = "flex";
       window.scrollTo({ top: 0, behavior: "instant" });
+      result.style.display = "none";
+      garden.style.display = "none";
       requestAnimationFrame(() => {
         resizeCelebrateCanvas();
         celebrateParticles = [];
@@ -690,7 +710,15 @@
         if (celebrateRaf) cancelAnimationFrame(celebrateRaf);
         celebrateRaf = requestAnimationFrame(drawCelebration);
       });
+
+      history.pushState({ screen: "celebrate" }, "", "#celebrate");
     }
+
+    window.addEventListener("popstate", () => {
+      if (location.hash !== "#celebrate") {
+        showMainScreen();
+      }
+    });
 
     // Yes clicked: lock it in, show celebration
     yesBtn.addEventListener("click", () => {
