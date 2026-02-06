@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Valentine</title>
+  <style>
+    :root {
+      --bg1: #e8f4ff;
+      --bg2: #fde2ef;
+      --bg3: #ffffff;
+      --ink: #111827;
+      --muted: rgba(17,24,39,.75);
+      --yes1: #16a34a;
+      --yes2: #22c55e;
+      --no1: #ef4444;
+      --no2: #fb7185;
+      --card: rgba(255,255,255,.86);
+      --border: rgba(0,0,0,.07);
+      --shadow: rgba(0,0,0,.12);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    }
+
+    * { box-sizing: border-box; }
+
+    body{
+      margin:0;
+      min-height:100vh;
+      color:var(--ink);
+      font-family:var(--sans);
+      background:
+        radial-gradient(900px 700px at 18% 18%, var(--bg1), transparent),
+        radial-gradient(900px 700px at 82% 32%, var(--bg2), transparent),
+        linear-gradient(180deg, #cfe9ff 0%, #e7f3ff 38%, #fde2ef 72%, var(--bg3) 100%);
+      background-size: 140% 140%;
+      animation: skyShift 22s ease-in-out infinite;
+      overflow-x:hidden;
+      padding:32px 0 80px;
+    }
+    @keyframes skyShift{
+      0% { background-position: 0% 10%; }
+      50% { background-position: 100% 90%; }
+      100% { background-position: 0% 10%; }
+    }
+
+    .card{
+      width:min(720px, 92vw);
+      padding:28px 22px 24px;
+      margin:0 auto;
+      background: #fff;
+      border:2px solid rgba(0,0,0,.12);
+      border-radius:6px;
+      text-align:center;
+      position:relative;
+      z-index:1;
+    }
+
+    h1{
+      margin:0 0 8px;
+      font-size: clamp(28px, 3.6vw, 44px);
+      letter-spacing:-0.02em;
+    }
+    p{
+      margin:0 0 18px;
+      font-size: clamp(14px, 2vw, 18px);
+      color: var(--muted);
+    }
+    .badge{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:700;
+      letter-spacing:.03em;
+      background: rgba(255,255,255,.7);
+      border:1px solid var(--border);
+      color: rgba(17,24,39,.7);
+      margin-bottom:10px;
+    }
+    .badge span{ font-size:13px; }
+    .subtitle{
+      margin:0 0 8px;
+      font-size: clamp(15px, 2.1vw, 20px);
+      color: rgba(17,24,39,.84);
+    }
+
+    .btnRow{
+      margin-top:18px;
+      display:flex;
+      gap:14px;
+      justify-content:center;
+      flex-wrap:wrap;
+      position:relative;
+      min-height:112px;
+    }
+
+    button{
+      border:1px solid rgba(0,0,0,.12);
+      padding:14px 20px;
+      border-radius:8px;
+      font-size:18px;
+      font-weight:800;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .08s ease, filter .2s ease, border-color .2s ease;
+      box-shadow:none;
+    }
+    button:active{ transform: scale(0.98); }
+
+    #yesBtn{
+      color:#fff;
+      background: linear-gradient(180deg, #22c55e, #16a34a);
+      border-color: rgba(0,0,0,.08);
+    }
+    #yesBtn:hover{ filter: brightness(0.98); }
+
+    #noBtn{
+      color:#fff;
+      background: linear-gradient(180deg, #fb7185, #ef4444);
+      border-color: rgba(0,0,0,.08);
+      position:absolute;
+      left: 56%;
+      top: 0;
+      transform: translateX(-50%);
+      white-space:nowrap;
+    }
+
+    .hint{
+      margin-top:12px;
+      font-size:13px;
+      color: rgba(17,24,39,.65);
+    }
+
+    .result{
+      margin-top:18px;
+      padding:14px 16px;
+      background: rgba(34,197,94,0.08);
+      border: 1px solid rgba(34,197,94,0.22);
+      border-radius:16px;
+      display:none;
+    }
+    .result strong{ font-size:18px; }
+    .result .tiny{
+      margin-top:6px;
+      font-size:13px;
+      color: rgba(17,24,39,.72);
+    }
+
+    /* Floating hearts + sparkles */
+    #floatLayer{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      overflow:hidden;
+      z-index:0;
+      opacity:0.9;
+    }
+    .float-heart{
+      position:absolute;
+      top:-24px;
+      font-size:16px;
+      opacity:1;
+      color:#ec4899;
+      animation: floatUp 12s linear forwards, drift 3.4s ease-in-out infinite;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,.15));
+    }
+    .burst-piece{
+      position:fixed;
+      width:8px;
+      height:8px;
+      border-radius:2px;
+      opacity:.9;
+      animation: shatter 700ms ease-out forwards;
+      pointer-events:none;
+      z-index:2;
+    }
+    .sling-heart{
+      position:fixed;
+      font-size:18px;
+      opacity:.95;
+      animation: sling 900ms ease-in forwards;
+      pointer-events:none;
+      z-index:2;
+    }
+    .sparkle{
+      position:absolute;
+      border-radius:50%;
+      background: radial-gradient(circle, #fff 0%, rgba(255,255,255,.4) 40%, rgba(255,255,255,0) 70%);
+      animation: twinkle 3.2s ease-in-out infinite;
+      opacity:.7;
+    }
+    @keyframes floatUp{
+      0% { transform: translateY(0) scale(.9); opacity:0; }
+      10% { opacity:1; }
+      100% { transform: translateY(120vh) scale(1.2); opacity:0; }
+    }
+    @keyframes drift{
+      0% { margin-left:-8px; transform: rotate(-6deg); }
+      50% { margin-left:8px; transform: rotate(6deg); }
+      100% { margin-left:-8px; transform: rotate(-6deg); }
+    }
+    @keyframes twinkle{
+      0%, 100% { transform: scale(.6); opacity:.2; }
+      50% { transform: scale(1.2); opacity:.9; }
+    }
+    @keyframes shatter{
+      0% { transform: translate(0,0) scale(1); opacity:1; }
+      100% { transform: translate(var(--dx), var(--dy)) scale(0.2); opacity:0; }
+    }
+    @keyframes sling{
+      0% { transform: translate(0,0) rotate(0deg); opacity:1; }
+      100% { transform: translate(var(--dx), var(--dy)) rotate(540deg); opacity:0; }
+    }
+
+    #celebrateOverlay{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:4;
+      pointer-events:none;
+      background: rgba(0,0,0,.08);
+    }
+    #celebrateCanvas{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+    }
+    #celebrateCenter{
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:10px;
+      padding:10px 14px;
+      background: rgba(255,255,255,.7);
+      border:1px solid rgba(0,0,0,.15);
+      border-radius:10px;
+      box-shadow: 0 16px 40px rgba(0,0,0,.25);
+    }
+    #celebrateCaption{
+      font-weight:800;
+      letter-spacing:.02em;
+      color:#111827;
+      font-size: clamp(22px, 4vw, 36px);
+    }
+
+    /* Celebration sky */
+    #garden {
+      margin-top:16px;
+      display:none;
+      width:100%;
+      border-radius:10px;
+      border:1px solid rgba(0,0,0,.12);
+      background: linear-gradient(180deg, #0b1220 0%, #0f172a 50%, #111827 100%);
+      overflow:hidden;
+    }
+
+    #gardenHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:10px 12px;
+      border-bottom:1px solid rgba(255,255,255,.12);
+      background: rgba(15,23,42,.6);
+      font-family:var(--mono);
+      font-size:12px;
+      color: rgba(255,255,255,.75);
+    }
+
+    #gardenCanvas {
+      margin:0;
+      height: 260px;
+      width:100%;
+      display:block;
+    }
+
+    .tinyBtn{
+      font-family:var(--mono);
+      font-size:12px;
+      padding:8px 10px;
+      border-radius:10px;
+      box-shadow:none;
+      background: rgba(255,255,255,.08);
+      color: rgba(255,255,255,.85);
+      border:1px solid rgba(255,255,255,.18);
+      font-weight:700;
+    }
+    .tinyBtn:hover{ filter: brightness(0.98); }
+  </style>
+</head>
+<body>
+  <div id="floatLayer" aria-hidden="true"></div>
+  <div class="card" id="card">
+    <div class="badge"><span>✿</span> handmade for you</div>
+    <h1>Julianna</h1>
+    <div class="subtitle">I made a tiny corner of the internet just for us.</div>
+    <p>Will you be my Valentine?</p>
+
+    <div class="btnRow" id="btnRow">
+      <button id="yesBtn">Yes</button>
+      <button id="noBtn" aria-label="No button">No</button>
+    </div>
+
+    <div class="hint" id="hint">There is only one stable answer here.</div>
+
+    <div class="result" id="result">
+      <strong>It's a date.</strong>
+      <div class="tiny">A little sky show is starting below.</div>
+    </div>
+
+    <div id="garden">
+      <div id="gardenHeader">
+        <div id="gardenStatus">scene: idle</div>
+        <div style="display:flex; gap:8px;">
+          <button class="tinyBtn" id="regrowBtn" type="button">replay</button>
+          <button class="tinyBtn" id="moreBtn" type="button">more</button>
+        </div>
+      </div>
+      <canvas id="gardenCanvas"></canvas>
+    </div>
+  </div>
+  <div id="celebrateOverlay" aria-hidden="true">
+    <canvas id="celebrateCanvas"></canvas>
+    <div id="celebrateCenter">
+      <div id="celebrateCaption">YAYYYYYY!</div>
+    </div>
+  </div>
+
+  <script>
+    const noBtn = document.getElementById("noBtn");
+    const yesBtn = document.getElementById("yesBtn");
+    const btnRow = document.getElementById("btnRow");
+    const hint = document.getElementById("hint");
+    const result = document.getElementById("result");
+    const garden = document.getElementById("garden");
+    const gardenCanvas = document.getElementById("gardenCanvas");
+    const gardenStatus = document.getElementById("gardenStatus");
+    const regrowBtn = document.getElementById("regrowBtn");
+    const moreBtn = document.getElementById("moreBtn");
+    const floatLayer = document.getElementById("floatLayer");
+    const celebrateOverlay = document.getElementById("celebrateOverlay");
+    const celebrateCanvas = document.getElementById("celebrateCanvas");
+    const celebrateCtx = celebrateCanvas.getContext("2d");
+    let celebrateParticles = [];
+    let celebrateRaf = null;
+    let celebrateStart = 0;
+    let celebrateLastBurst = 0;
+
+    let dodgeCount = 0;
+    let accepted = false;
+
+    function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+
+    function placeNoButtonRandomly() {
+      const rowRect = btnRow.getBoundingClientRect();
+      const btnRect = noBtn.getBoundingClientRect();
+
+      const padding = 8;
+      const maxX = rowRect.width - btnRect.width - padding;
+      const maxY = rowRect.height - btnRect.height - padding;
+
+      const x = Math.random() * clamp(maxX, 0, maxX) + padding;
+      const y = Math.random() * clamp(maxY, 0, maxY) + padding;
+
+      noBtn.style.left = `${x}px`;
+      noBtn.style.top  = `${y}px`;
+    }
+
+    function distanceToNoButton(clientX, clientY) {
+      const rect = noBtn.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = clientX - cx;
+      const dy = clientY - cy;
+      return Math.sqrt(dx*dx + dy*dy);
+    }
+
+    function dodge() {
+      if (accepted) return;
+
+      dodgeCount++;
+      placeNoButtonRandomly();
+      playfulDeflect();
+
+      // Make Yes subtly larger as the user insists on "No"
+      const scale = 1 + Math.min(0.22, dodgeCount * 0.02);
+      yesBtn.style.transform = `scale(${scale})`;
+
+    }
+
+    placeNoButtonRandomly();
+    window.addEventListener("resize", () => {
+      placeNoButtonRandomly();
+      if (garden.style.display === "block") resizeCanvas();
+      if (celebrateOverlay.style.display === "flex") resizeCelebrateCanvas();
+    });
+
+    document.addEventListener("mousemove", (e) => {
+      if (accepted) return;
+      const d = distanceToNoButton(e.clientX, e.clientY);
+      if (d < 120) dodge();
+    });
+
+    noBtn.addEventListener("mouseenter", dodge);
+
+    // Touch support
+    noBtn.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      dodge();
+    }, { passive:false });
+
+    // Prevent "No" by intercepting clicks too (in case someone manages it)
+    noBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      dodge();
+    });
+ 
+    // Floating hearts + sparkles
+    function spawnHeart() {
+      const heart = document.createElement("span");
+      heart.className = "float-heart";
+      heart.textContent = Math.random() > 0.5 ? "♥" : "♡";
+      heart.style.left = `${Math.random() * 100}%`;
+      heart.style.top = `${-20 + Math.random() * 120}vh`;
+      heart.style.fontSize = `${12 + Math.random() * 26}px`;
+      heart.style.animationDuration = `${9 + Math.random() * 6}s`;
+      heart.style.animationDelay = `${Math.random() * 0.6}s`;
+      floatLayer.appendChild(heart);
+      setTimeout(() => heart.remove(), 16000);
+    }
+    function spawnSparkle() {
+      const sparkle = document.createElement("span");
+      sparkle.className = "sparkle";
+      const size = 6 + Math.random() * 12;
+      sparkle.style.width = `${size}px`;
+      sparkle.style.height = `${size}px`;
+      sparkle.style.left = `${Math.random() * 100}%`;
+      sparkle.style.top = `${Math.random() * 100}%`;
+      sparkle.style.animationDuration = `${2.4 + Math.random() * 2.6}s`;
+      floatLayer.appendChild(sparkle);
+      setTimeout(() => sparkle.remove(), 5200);
+    }
+    function spawnHeartBurst() {
+      const count = 4 + Math.floor(Math.random() * 6);
+      for (let i = 0; i < count; i++) spawnHeart();
+    }
+    setInterval(spawnHeartBurst, 260);
+    setInterval(spawnSparkle, 320);
+
+    function playfulDeflect() {
+      const rect = noBtn.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      if (dodgeCount % 2 === 0) {
+        shatterBurst(cx, cy);
+      } else {
+        slingHeart(cx, cy);
+      }
+    }
+
+    function shatterBurst(x, y) {
+      const colors = ["#ef4444", "#fb7185", "#fda4af", "#f97316"];
+      for (let i = 0; i < 12; i++) {
+        const piece = document.createElement("span");
+        piece.className = "burst-piece";
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 30 + Math.random() * 60;
+        piece.style.left = `${x}px`;
+        piece.style.top = `${y}px`;
+        piece.style.background = colors[i % colors.length];
+        piece.style.setProperty("--dx", `${Math.cos(angle) * dist}px`);
+        piece.style.setProperty("--dy", `${Math.sin(angle) * dist}px`);
+        document.body.appendChild(piece);
+        setTimeout(() => piece.remove(), 800);
+      }
+    }
+
+    function slingHeart(x, y) {
+      const sling = document.createElement("span");
+      sling.className = "sling-heart";
+      sling.textContent = Math.random() > 0.5 ? "♥" : "♡";
+      sling.style.left = `${x}px`;
+      sling.style.top = `${y}px`;
+      const dx = (Math.random() > 0.5 ? 1 : -1) * (160 + Math.random() * 200);
+      const dy = -120 - Math.random() * 120;
+      sling.style.setProperty("--dx", `${dx}px`);
+      sling.style.setProperty("--dy", `${dy}px`);
+      document.body.appendChild(sling);
+      setTimeout(() => sling.remove(), 900);
+    }
+
+    // --- Celebration sky animation ---
+    const ctx = gardenCanvas.getContext("2d");
+    let stars = [];
+    let particles = [];
+    let rafId = null;
+    let showStart = 0;
+    let extraBursts = 0;
+
+    function resizeCanvas() {
+      const rect = gardenCanvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      gardenCanvas.width = Math.max(1, Math.floor(rect.width * dpr));
+      gardenCanvas.height = Math.max(1, Math.floor(rect.height * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      makeStars();
+    }
+
+    function resizeCelebrateCanvas() {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = celebrateOverlay.getBoundingClientRect();
+      const w = Math.max(1, Math.floor(rect.width * dpr));
+      const h = Math.max(1, Math.floor(rect.height * dpr));
+      celebrateCanvas.width = w;
+      celebrateCanvas.height = h;
+      celebrateCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function makeStars() {
+      const w = gardenCanvas.getBoundingClientRect().width;
+      const h = gardenCanvas.getBoundingClientRect().height;
+      stars = Array.from({ length: 70 }, () => ({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        r: 0.6 + Math.random() * 1.4,
+        a: 0.2 + Math.random() * 0.8,
+        tw: 0.004 + Math.random() * 0.01
+      }));
+    }
+
+    function spawnBurst(cx, cy, count) {
+      const colors = ["#ff7ab6", "#ffd1e6", "#a5f3fc", "#fca5a5"];
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 0.6 + Math.random() * 2.2;
+        particles.push({
+          x: cx,
+          y: cy,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 0.8,
+          life: 60 + Math.random() * 30,
+          age: 0,
+          size: 10 + Math.random() * 10,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          glyph: Math.random() > 0.3 ? "♥" : "♡"
+        });
+      }
+    }
+
+    function draw() {
+      const rect = gardenCanvas.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+      ctx.clearRect(0, 0, w, h);
+
+      // soft nebula glow
+      const g = ctx.createRadialGradient(w * 0.25, h * 0.2, 20, w * 0.25, h * 0.2, w * 0.9);
+      g.addColorStop(0, "rgba(255,182,193,0.12)");
+      g.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+
+      // stars
+      for (const s of stars) {
+        s.a += s.tw;
+        if (s.a > 1 || s.a < 0.2) s.tw *= -1;
+        ctx.globalAlpha = s.a;
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      // particles
+      particles = particles.filter(p => p.age < p.life);
+      for (const p of particles) {
+        p.age++;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.02;
+        const alpha = Math.max(0, 1 - p.age / p.life);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = p.color;
+        ctx.font = `${p.size}px "Times New Roman", serif`;
+        ctx.fillText(p.glyph, p.x, p.y);
+      }
+      ctx.globalAlpha = 1;
+
+      // status
+      const elapsed = Date.now() - showStart;
+      if (elapsed > 5200) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+        gardenStatus.textContent = "scene: complete";
+      } else {
+        rafId = requestAnimationFrame(draw);
+      }
+    }
+
+    function startShow(burstCount) {
+      garden.style.display = "block";
+      gardenStatus.textContent = "scene: warming up";
+      resizeCanvas();
+
+      particles = [];
+      const rect = gardenCanvas.getBoundingClientRect();
+      for (let i = 0; i < burstCount; i++) {
+        const x = rect.width * (0.2 + Math.random() * 0.6);
+        const y = rect.height * (0.35 + Math.random() * 0.4);
+        spawnBurst(x, y, 28 + Math.floor(Math.random() * 18));
+      }
+
+      gardenStatus.textContent = "scene: playing";
+      showStart = Date.now();
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(draw);
+    }
+
+    function spawnCelebrateBurst() {
+      const colors = ["#ff7ab6", "#ffd1e6", "#a5f3fc", "#fca5a5", "#fde68a"];
+      const rect = celebrateOverlay.getBoundingClientRect();
+      const x = rect.width * (0.15 + Math.random() * 0.7);
+      const y = rect.height * (0.15 + Math.random() * 0.45);
+      const count = 30 + Math.floor(Math.random() * 20);
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 1 + Math.random() * 3.2;
+        celebrateParticles.push({
+          x,
+          y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 1,
+          life: 80 + Math.random() * 40,
+          age: 0,
+          size: 10 + Math.random() * 12,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          glyph: Math.random() > 0.3 ? "♥" : "♡"
+        });
+      }
+    }
+
+    function drawCelebration() {
+      const rect = celebrateOverlay.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+      celebrateCtx.clearRect(0, 0, w, h);
+
+      celebrateParticles = celebrateParticles.filter(p => p.age < p.life);
+      for (const p of celebrateParticles) {
+        p.age++;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.03;
+        const alpha = Math.max(0, 1 - p.age / p.life);
+        celebrateCtx.globalAlpha = alpha;
+        celebrateCtx.fillStyle = p.color;
+        celebrateCtx.font = `${p.size}px "Times New Roman", serif`;
+        celebrateCtx.fillText(p.glyph, p.x, p.y);
+      }
+      celebrateCtx.globalAlpha = 1;
+
+      const now = Date.now();
+      if (now - celebrateLastBurst > 380 && now - celebrateStart < 7000) {
+        celebrateLastBurst = now;
+        spawnCelebrateBurst();
+      }
+
+      if (now - celebrateStart < 9000) {
+        celebrateRaf = requestAnimationFrame(drawCelebration);
+      }
+    }
+
+    function startCelebration() {
+      document.getElementById("card").style.display = "none";
+      celebrateOverlay.style.display = "flex";
+      window.scrollTo({ top: 0, behavior: "instant" });
+      requestAnimationFrame(() => {
+        resizeCelebrateCanvas();
+        celebrateParticles = [];
+        celebrateStart = Date.now();
+        celebrateLastBurst = 0;
+        if (celebrateRaf) cancelAnimationFrame(celebrateRaf);
+        celebrateRaf = requestAnimationFrame(drawCelebration);
+      });
+    }
+
+    // Yes clicked: lock it in, show celebration
+    yesBtn.addEventListener("click", () => {
+      if (accepted) return;
+      accepted = true;
+
+      result.style.display = "block";
+      hint.textContent = "Locked in.";
+
+      noBtn.style.opacity = "0.25";
+      noBtn.style.pointerEvents = "none";
+
+      // base amount + extras (if user presses "more")
+      startShow(3 + extraBursts);
+      startCelebration();
+    });
+
+    regrowBtn.addEventListener("click", () => {
+      if (!accepted) return;
+      startShow(3 + extraBursts);
+      startCelebration();
+    });
+
+    moreBtn.addEventListener("click", () => {
+      if (!accepted) return;
+      extraBursts = Math.min(extraBursts + 1, 6);
+      startShow(3 + extraBursts);
+      startCelebration();
+    });
+  </script>
+</body>
+</html>
